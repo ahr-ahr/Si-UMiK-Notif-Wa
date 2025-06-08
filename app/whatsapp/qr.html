@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WhatsApp QR Scanner</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+      body {
+        background: #f9f9f9;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        padding: 20px;
+        color: #333;
+      }
+      h1 {
+        margin-bottom: 1rem;
+        font-weight: 700;
+        color: #075e54; /* WhatsApp green */
+        text-align: center;
+      }
+      #qrcode {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      p.status {
+        margin-top: 1rem;
+        font-size: 1.1rem;
+        color: #25d366; /* WhatsApp bright green */
+        font-weight: 600;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Scan QR Code WhatsApp</h1>
+    <div id="qrcode"></div>
+    <p class="status" id="statusMsg">Menunggu QR Code...</p>
+
+    <script>
+      const socket = io("http://localhost:3000");
+      const qrContainer = document.getElementById("qrcode");
+      const statusMsg = document.getElementById("statusMsg");
+      let qrCode;
+
+      socket.on("qr", (qr) => {
+        console.log("QR string received:", qr); // debug
+        // Hapus QR sebelumnya kalau ada
+        qrContainer.innerHTML = "";
+        // Generate QR code baru
+        qrCode = new QRCode(qrContainer, {
+          text: qr,
+          width: 256,
+          height: 256,
+        });
+        statusMsg.textContent = "Silakan scan QR di atas dengan WhatsApp Anda";
+        statusMsg.style.color = "#333";
+      });
+
+      socket.on("connected", () => {
+        qrContainer.innerHTML = "";
+        statusMsg.textContent = "✅ WhatsApp berhasil terhubung";
+        statusMsg.style.color = "#25d366";
+      });
+
+      socket.on("disconnect", () => {
+        statusMsg.textContent = "⚠️ Terputus, silakan refresh halaman";
+        statusMsg.style.color = "#e53935";
+      });
+
+      socket.on("status", (msg) => {
+        if (msg === "waiting") {
+          statusMsg.textContent = "Menunggu QR Code...";
+          statusMsg.style.color = "#999";
+        }
+      });
+    </script>
+  </body>
+</html>
