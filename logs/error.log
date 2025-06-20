@@ -7,3 +7,14 @@
 [2025-06-05 22:58:26] [31merror[39m: ❌ Failed sending message to 6288217689313: Cannot read properties of undefined (reading 'map')
 [2025-06-05 22:59:17] [31merror[39m: ❌ Failed sending message to 6288217689313: Cannot read properties of undefined (reading 'map')
 [2025-06-05 22:59:54] [31merror[39m: ❌ Failed sending message to 6288217689313: Cannot read properties of undefined (reading 'Message')
+[2025-06-18 22:46:19] [31merror[39m: ❌ Failed sending message to 6282331422421: Cannot read properties of undefined (reading 'ch')
+[2025-06-18 22:47:40] [31merror[39m: ❌ Failed sending message to 6282331422421: Cannot read properties of undefined (reading 'ch')
+[2025-06-18 22:47:48] [31merror[39m: ❌ Failed sending message to 6282331422421: sock.sendMessage is not a function
+[2025-06-18 22:51:30] [31merror[39m: ❌ Failed sending message to 6282331422421: WhatsApp client not initialized
+[2025-06-18 22:52:11] [31merror[39m: ❌ Failed sending message to 6282331422421: invalid encoding
+[2025-06-18 22:53:18] [31merror[39m: ❌ Failed sending message to 6282331422421: Cannot read properties of undefined (reading 'fromMe')
+[2025-06-18 22:54:18] [31merror[39m: ❌ Failed sending message to 6282331422421: m is not defined
+[2025-06-18 22:54:49] [31merror[39m: ❌ Failed sending message to 6282331422421: Cannot read properties of undefined (reading 'fromMe')
+[2025-06-18 23:07:16] [31merror[39m: ❌ Failed to send button coba to 6282331422421: sendButtonCoba is not defined
+[2025-06-18 23:21:52] [31merror[39m: ❌ Failed sending message to 6282331422421: Cannot read properties of undefined (reading 'fromMe')
+[2025-06-18 23:22:58] [31merror[39m: ❌ Failed sending message to 6282331422421: Cannot read properties of undefined (reading 'fromMe')

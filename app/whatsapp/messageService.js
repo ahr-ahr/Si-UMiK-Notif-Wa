@@ -9,7 +9,11 @@ async function sendText(
   teks,
   mention = ["6282331422421@s.whatsapp.net"],
   globalimgreply = "https://suumik.com",
-  fVerif = null
+  fVerif = null,
+  ucapanWaktu = "Halo",
+  ch = null,
+  media = "https://suumik.com",
+  source = "https://suumik.com"
 ) {
   const sock = getSocket();
   if (!sock) throw new Error("WhatsApp client not initialized");
@@ -20,18 +24,31 @@ async function sendText(
     jid,
     {
       text: teks,
+      footer: ucapanWaktu,
       contextInfo: {
-        mentionedJid: mention, // array JID yang di-mention, contoh ['628123456789@s.whatsapp.net']
+        mentionedJid: mention,
+        forwardingScore: 10,
+        isForwarded: true,
+        forwardedNewsletterMessageInfo: {
+          newsletterJid: ch,
+          serverMessageId: null,
+          newsletterName: "Join For More Info",
+        },
         externalAdReply: {
-          thumbnailUrl: globalimgreply, // URL thumbnail (pastikan global.imgreply sudah terisi URL valid)
           title: "© Si UMiK",
           body: "Si UMiK",
+          thumbnailUrl: globalimgreply,
+          mediaType: 1,
           previewType: "0",
+          showAdAttribution: true,
+          renderLargerThumbnail: true,
+          mediaUrl: media,
+          sourceUrl: source,
         },
       },
     },
     {
-      quoted: fVerif, // pesan yang mau di-quote (bisa null kalau gak mau)
+      quoted: fVerif,
     }
   );
 }

@@ -49,7 +49,7 @@ if (!globalThis.crypto?.subtle) {
 const PORT = process.env.PORT || 3000;
 
 initWhatsApp(io).then(() => {
-  server.listen(PORT, () => {
-    console.log(`🚀 wa-notif ready at http://localhost:${PORT}`);
+  server.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 wa-notif ready at http://0.0.0.0:${PORT}`);
   });
 });
