@@ -1,99 +1,130 @@
-const {
-  default: makeWASocket,
-  useMultiFileAuthState,
-  DisconnectReason,
-  BufferJSON,
-  WA_DEFAULT_EPHEMERAL,
-  generateWAMessageFromContent,
-  proto,
-  generateWAMessageContent,
-  generateWAMessage,
-  prepareWAMessageMedia,
-  areJidsSameUser,
-  getContentType,
-} = require("@whiskeysockets/baileys");
 const P = require("pino");
 
+// ===== Baileys v7 dynamic import (WAJIB) =====
+let makeWASocket;
+let useMultiFileAuthState;
+let DisconnectReason;
+let getContentType;
+
+async function loadBaileys() {
+  const baileys = await import("@whiskeysockets/baileys");
+  makeWASocket = baileys.default;
+  useMultiFileAuthState = baileys.useMultiFileAuthState;
+  DisconnectReason = baileys.DisconnectReason;
+  getContentType = baileys.getContentType;
+}
+
+// ===== GLOBAL STATE =====
 let sock;
 let lastQRCode = null;
+let pairingMode = false;
 
+// ===== crypto polyfill (Node < 20) =====
 if (!globalThis.crypto?.subtle) {
   const { webcrypto } = require("crypto");
   globalThis.crypto = webcrypto;
 }
 
+// ===== INIT WHATSAPP =====
 async function initWhatsApp(io) {
+  if (!makeWASocket) {
+    await loadBaileys();
+  }
+
   const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
 
   sock = makeWASocket({
     auth: state,
-    syncFullHistory: true,
-    logger: P({ level: "silent" }), // optionally mute Baileys logs
+    logger: P({ level: "silent" }),
+    markOnlineOnConnect: false,
+    syncFullHistory: false,
   });
 
-  sock.ev.on("creds.update", saveCreds);
+  // ===== SAVE AUTH =====
+  sock.ev.on("creds.update", async () => {
+    await saveCreds();
+    console.log("creds.update: auth saved");
+  });
 
-  sock.ev.on("connection.update", async (update) => {
+  // ===== CONNECTION UPDATE =====
+  sock.ev.on("connection.update", (update) => {
     const { connection, lastDisconnect, qr } = update;
 
-    if (qr) {
+    if (qr && !pairingMode) {
       lastQRCode = qr;
-      console.log("QR code updated:", qr);
       io.emit("qr", qr);
+      console.log("QR updated");
     }
 
-    if (
-      connection === "close" &&
-      lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut
-    ) {
-      console.log("Disconnected, reconnecting...");
-      await initWhatsApp(io);
-    } else if (connection === "open") {
+    if (connection === "open") {
+      pairingMode = false;
       lastQRCode = null;
       io.emit("connected");
       console.log("WhatsApp connected");
     }
+
+    if (connection === "close") {
+      const reason = lastDisconnect?.error?.output?.statusCode;
+      console.log("WA connection closed:", reason);
+
+      if (reason === DisconnectReason.loggedOut) {
+        console.log("Logged out. Delete auth_info and restart.");
+      }
+    }
   });
 
-  // Event listener untuk pesan masuk
+  // ===== MESSAGE LISTENER =====
   sock.ev.on("messages.upsert", async ({ type, messages }) => {
-    if (type === "notify") {
-      for (const m of messages) {
-        if (!m.message || m.key.fromMe) continue;
+    if (type !== "notify") return;
 
-        const mtype = getContentType(m.message);
-        const msg = m.message;
-        const from = m.key.remoteJid;
+    for (const m of messages) {
+      if (!m.message || m.key.fromMe) continue;
 
-        const body =
-          mtype === "conversation"
-            ? msg.conversation
-            : mtype === "imageMessage"
-            ? msg.imageMessage.caption
-            : mtype === "videoMessage"
-            ? msg.videoMessage.caption
-            : mtype === "extendedTextMessage"
-            ? msg.extendedTextMessage.text
-            : mtype === "buttonsResponseMessage"
-            ? msg.buttonsResponseMessage.selectedButtonId
-            : mtype === "listResponseMessage"
-            ? msg.listResponseMessage.singleSelectReply?.selectedRowId
-            : mtype === "templateButtonReplyMessage"
-            ? msg.templateButtonReplyMessage.selectedId
-            : m.message?.buttonsResponseMessage?.selectedButtonId ||
-              m.message?.listResponseMessage?.singleSelectReply
-                ?.selectedRowId ||
-              m.text ||
-              "";
+      const mtype = getContentType(m.message);
+      const msg = m.message;
+      const from = m.key.remoteJid;
 
-        console.log("📥 Pesan dari", from, ":", body);
-      }
+      const body =
+        mtype === "conversation"
+          ? msg.conversation
+          : mtype === "extendedTextMessage"
+          ? msg.extendedTextMessage.text
+          : mtype === "imageMessage"
+          ? msg.imageMessage.caption
+          : mtype === "videoMessage"
+          ? msg.videoMessage.caption
+          : mtype === "buttonsResponseMessage"
+          ? msg.buttonsResponseMessage.selectedButtonId
+          : mtype === "listResponseMessage"
+          ? msg.listResponseMessage.singleSelectReply?.selectedRowId
+          : mtype === "templateButtonReplyMessage"
+          ? msg.templateButtonReplyMessage.selectedId
+          : "";
+
+      console.log("Message from", from, ":", body);
     }
   });
 
   return sock;
 }
 
+async function requestPairingCode(phoneNumber) {
+  if (!sock) {
+    throw new Error("WhatsApp belum diinisialisasi");
+  }
+
+  pairingMode = true;
+  lastQRCode = null;
+
+  const cleanNumber = phoneNumber.replace(/\D/g, "");
+
+  const code = await sock.requestPairingCode(cleanNumber);
+  console.log("Pairing code generated:", code);
+
+  return code;
+}
+
+// ===== HELPERS =====
 function getLastQRCode() {
   return lastQRCode;
 }
@@ -102,4 +133,9 @@ function getSocket() {
   return sock;
 }
 
-module.exports = { initWhatsApp, getSocket, getLastQRCode };
+module.exports = {
+  initWhatsApp,
+  getSocket,
+  getLastQRCode,
+  requestPairingCode,
+};
