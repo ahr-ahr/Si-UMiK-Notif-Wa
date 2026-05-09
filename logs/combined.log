@@ -1,0 +1,10 @@
+[2026-05-09 12:17:54] [32minfo[39m: ➡️ Sending image from URL to 62811111111
+[2026-05-09 12:17:54] [31merror[39m: ❌ Failed sending image to 62811111111: connect ECONNREFUSED ::1:8000
+[2026-05-09 12:22:55] [32minfo[39m: ➡️ Sending image from URL to 62811111111
+[2026-05-09 12:22:55] [31merror[39m: ❌ Failed sending image to 62811111111: connect ECONNREFUSED ::1:8000
+[2026-05-09 12:30:56] [32minfo[39m: ➡️ Sending image from URL to 6287768662007
+[2026-05-09 12:30:56] [31merror[39m: ❌ Failed sending image to 6287768662007: connect ECONNREFUSED ::1:8000
+[2026-05-09 12:35:49] [32minfo[39m: ➡️ Sending image from URL to 6287768662007
+[2026-05-09 12:35:49] [31merror[39m: ❌ Failed sending image to 6287768662007: connect ECONNREFUSED ::1:8000
+[2026-05-09 12:51:23] [32minfo[39m: ➡️ Sending image from URL to 6287768662007
+[2026-05-09 12:51:23] [31merror[39m: ❌ Failed sending image to 6287768662007: connect ECONNREFUSED ::1:8000

@@ -5,6 +5,7 @@ let makeWASocket;
 let useMultiFileAuthState;
 let DisconnectReason;
 let getContentType;
+let fetchLatestBaileysVersion;
 
 async function loadBaileys() {
   const baileys = await import("@whiskeysockets/baileys");
@@ -12,6 +13,7 @@ async function loadBaileys() {
   useMultiFileAuthState = baileys.useMultiFileAuthState;
   DisconnectReason = baileys.DisconnectReason;
   getContentType = baileys.getContentType;
+  fetchLatestBaileysVersion = baileys.fetchLatestBaileysVersion;
 }
 
 // ===== GLOBAL STATE =====
@@ -33,11 +35,15 @@ async function initWhatsApp(io) {
 
   const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
 
+  const { version, isLatest } = await fetchLatestBaileysVersion();
+
   sock = makeWASocket({
+    version,
     auth: state,
     logger: P({ level: "silent" }),
     markOnlineOnConnect: false,
     syncFullHistory: false,
+    browser: ["Si-UMiK", "Chrome", "2.0.0"],
   });
 
   // ===== SAVE AUTH =====
@@ -69,6 +75,9 @@ async function initWhatsApp(io) {
 
       if (reason === DisconnectReason.loggedOut) {
         console.log("Logged out. Delete auth_info and restart.");
+      } else {
+        console.log("Reconnecting...");
+        initWhatsApp(io);
       }
     }
   });
@@ -88,18 +97,18 @@ async function initWhatsApp(io) {
         mtype === "conversation"
           ? msg.conversation
           : mtype === "extendedTextMessage"
-          ? msg.extendedTextMessage.text
-          : mtype === "imageMessage"
-          ? msg.imageMessage.caption
-          : mtype === "videoMessage"
-          ? msg.videoMessage.caption
-          : mtype === "buttonsResponseMessage"
-          ? msg.buttonsResponseMessage.selectedButtonId
-          : mtype === "listResponseMessage"
-          ? msg.listResponseMessage.singleSelectReply?.selectedRowId
-          : mtype === "templateButtonReplyMessage"
-          ? msg.templateButtonReplyMessage.selectedId
-          : "";
+            ? msg.extendedTextMessage.text
+            : mtype === "imageMessage"
+              ? msg.imageMessage.caption
+              : mtype === "videoMessage"
+                ? msg.videoMessage.caption
+                : mtype === "buttonsResponseMessage"
+                  ? msg.buttonsResponseMessage.selectedButtonId
+                  : mtype === "listResponseMessage"
+                    ? msg.listResponseMessage.singleSelectReply?.selectedRowId
+                    : mtype === "templateButtonReplyMessage"
+                      ? msg.templateButtonReplyMessage.selectedId
+                      : "";
 
       console.log("Message from", from, ":", body);
     }
